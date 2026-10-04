@@ -1,18 +1,75 @@
+import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import { uid } from "../../shared/utils.js";
-import { AddButton, Empty, iconButton, MediaInput, Notice, Section, Slider, Toggle } from "../controls.jsx";
-import { SortableList } from "../SortableList.jsx";
+import { backgroundKind, formatClock, parseClock, streamEmbed, uid } from "../../shared/utils.js";
+import { Field, iconButton, MediaInput, Notice, Section, Slider } from "../controls.jsx";
+import { TrackRange } from "../TrackRange.jsx";
+
+const BLANK = { id: "", url: "", start: 0 };
+
+// A time typed as "1:30" (or plain seconds), stored as seconds. Empty means 0.
+function ClockInput({ label, hint, value, onChange, placeholder }) {
+  const [draft, setDraft] = useState(null);
+  const commit = () => {
+    if (draft === null) return;
+    onChange(parseClock(draft));
+    setDraft(null);
+  };
+  return (
+    <Field label={label} hint={hint}>
+      <input
+        className="ed-input max-w-28"
+        inputMode="numeric"
+        placeholder={placeholder}
+        aria-label={label}
+        value={draft ?? (value > 0 ? formatClock(value) : "")}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+      />
+    </Field>
+  );
+}
+
+// Tells the user how their link will be played.
+function SourceNote({ url }) {
+  const value = String(url ?? "").trim();
+  if (!value) return null;
+  const embed = streamEmbed(value);
+  if (embed?.background) {
+    return (
+      <p className="text-[11px] leading-relaxed text-emerald-300/80">
+        {embed.provider} link: plays as audio in the background. Nothing from {embed.provider} is shown on your page.
+      </p>
+    );
+  }
+  if (embed) {
+    return (
+      <p className="text-[11px] leading-relaxed text-amber-200/80">
+        This {embed.provider} link can&apos;t play in the background, so it won&apos;t play on your page. Use a
+        link to one YouTube video or one SoundCloud song, or upload the audio file.
+      </p>
+    );
+  }
+  if (/^https:\/\/[^/]*(youtube|youtu\.be|spotify|soundcloud|apple|deezer)/i.test(value)) {
+    return (
+      <p className="text-[11px] leading-relaxed text-amber-200/80">
+        This link isn&apos;t recognized. Use the full link to one song, copied from the address bar.
+      </p>
+    );
+  }
+  return null;
+}
 
 export default function MusicPanel({ config, update }) {
   const music = config.music;
-  const tracks = music.tracks;
-  const set = (key) => (value) => update(`music.${key}`, value);
-  const addTrack = () =>
-    update("music.tracks", [...tracks, { id: uid(), title: "", artist: "", url: "", cover: "" }]);
+  // A page has one song; the first edit creates it.
+  const track = music.tracks[0] ?? BLANK;
+  const hasSong = Boolean(track.url.trim());
+  const setTrack = (changes) => update("music.tracks", [{ ...track, id: track.id || uid(), ...changes }]);
 
   return (
     <>
-      {tracks.length > 0 && !config.effects.enterGate && (
+      {hasSong && !config.effects.enterGate && (
         <Notice
           tone="warn"
           action={
@@ -25,75 +82,58 @@ export default function MusicPanel({ config, update }) {
             </button>
           }
         >
-          Browsers block sound until the visitor clicks. Turn on &ldquo;Click to enter&rdquo; so music can start.
+          Browsers block sound until the visitor clicks. Music starts on their first click anywhere; turn on
+          &ldquo;Click to enter&rdquo; so it starts right as they open your page.
         </Notice>
       )}
 
       <Section
-        title="Tracks"
-        description="Upload audio files or paste direct links (.mp3, .ogg, .wav)."
-        action={<AddButton onClick={addTrack} />}
+        title="Song"
+        description="One song plays in the background. Your page shows no title or player for it, only a small sound button in the corner. Paste a YouTube or SoundCloud link, a direct audio link (.mp3, .ogg, .wav), or upload a file. Spotify, Apple Music and Deezer don't allow background playing, so their links won't work."
+        action={
+          music.tracks.length > 0 && (
+            <button
+              type="button"
+              className={iconButton}
+              onClick={() => update("music.tracks", [])}
+              aria-label="Remove the song"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )
+        }
       >
-        {tracks.length === 0 ? (
-          <Empty>No tracks yet.</Empty>
-        ) : (
-          <SortableList
-            items={tracks}
-            onReorder={(next) => update("music.tracks", next)}
-            renderItem={(track, index, handle) => (
-              <div className="space-y-2.5 rounded-xl border border-white/[0.06] bg-black/20 p-2.5">
-                <div className="flex items-center gap-2">
-                  {handle}
-                  <input
-                    className="ed-input"
-                    placeholder="Title"
-                    value={track.title}
-                    onChange={(e) => update(`music.tracks.${index}.title`, e.target.value)}
-                    aria-label="Track title"
-                  />
-                  <button
-                    type="button"
-                    className={iconButton}
-                    onClick={() => update("music.tracks", tracks.filter((item) => item.id !== track.id))}
-                    aria-label="Remove track"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="space-y-2.5 pl-[30px]">
-                  <input
-                    className="ed-input"
-                    placeholder="Artist (optional)"
-                    value={track.artist}
-                    onChange={(e) => update(`music.tracks.${index}.artist`, e.target.value)}
-                    aria-label="Artist"
-                  />
-                  <MediaInput
-                    label="Audio"
-                    value={track.url}
-                    onChange={(value) => update(`music.tracks.${index}.url`, value)}
-                    accept="audio/*"
-                    kind="audio"
-                  />
-                  <MediaInput
-                    label="Cover (optional)"
-                    value={track.cover}
-                    onChange={(value) => update(`music.tracks.${index}.cover`, value)}
-                  />
-                </div>
-              </div>
-            )}
-          />
+        <MediaInput
+          label="Song link or file"
+          value={track.url}
+          onChange={(value) => setTrack({ url: value, start: 0 })}
+          accept="audio/*"
+          kind="audio"
+        />
+        <SourceNote url={track.url} />
+        {backgroundKind(track.url) && (
+          <>
+            <Field label="Where the song starts">
+              <TrackRange
+                url={track.url}
+                start={track.start}
+                volume={music.volume}
+                onChange={(start) => setTrack({ start })}
+              />
+            </Field>
+            <ClockInput
+              label="Start at"
+              hint="Or type the time, like 0:45. The song plays from there to its end, then starts again."
+              placeholder="0:00"
+              value={track.start}
+              onChange={(start) => setTrack({ start })}
+            />
+          </>
         )}
-      </Section>
-
-      <Section title="Player">
-        <Toggle label="Show the player on the page" checked={music.showPlayer} onChange={set("showPlayer")} />
-        <Toggle label="Shuffle" checked={music.shuffle} onChange={set("shuffle")} />
         <Slider
           label="Volume"
           value={music.volume}
-          onChange={set("volume")}
+          onChange={(value) => update("music.volume", value)}
           min={0}
           max={1}
           step={0.05}

@@ -57,7 +57,7 @@ const TABS = [
   { id: "look", label: "Look", icon: Palette, Panel: LookPanel, blurb: "Presets, colors, font, card and background." },
   { id: "effects", label: "Effects", icon: Sparkles, Panel: EffectsPanel, blurb: "Tilt, cursor, name and background effects." },
   { id: "discord", label: "Discord", icon: DiscordGlyph, Panel: DiscordPanel, blurb: "Live status, activity and Spotify through Lanyard." },
-  { id: "music", label: "Music", icon: Music, Panel: MusicPanel, blurb: "Tracks and the music player." },
+  { id: "music", label: "Music", icon: Music, Panel: MusicPanel, blurb: "The song that plays in the background." },
   { id: "account", label: "Account", icon: Settings, Panel: AccountPanel, blurb: "Your login, your page link and invites." },
 ];
 
