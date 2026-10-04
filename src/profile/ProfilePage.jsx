@@ -4,7 +4,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { Eye, MapPin, Star } from "lucide-react";
 import { BADGE_ICONS } from "../shared/platforms.jsx";
 import { useMediaUrl } from "../shared/media.js";
-import { MSG } from "../shared/storage.js";
+import { AUDIO_CHANNEL, MSG } from "../shared/storage.js";
 import { decorationUrl, discordAvatarUrl, samplePresence, useLanyard } from "../shared/useLanyard.js";
 import { useViewCount } from "../shared/useViewCount.js";
 import { copyText, hexToRgba } from "../shared/utils.js";
@@ -12,7 +12,7 @@ import { Background, BackgroundFx } from "./Background.jsx";
 import DiscordCard from "./DiscordCard.jsx";
 import { useAnimatedTitle, useGoogleFont, useTypewriter } from "./hooks.js";
 import { LinkCards, Socials } from "./Links.jsx";
-import MusicPlayer, { usePlaylist } from "./MusicPlayer.jsx";
+import { SoundToggle, useMusic } from "./MusicPlayer.jsx";
 import NameEffect from "./NameEffect.jsx";
 import { useCursorFx } from "./useCursorFx.js";
 
@@ -210,7 +210,7 @@ export default function ProfilePage({ config, username, embedded, options }) {
     () => (options?.sampleActivity ? samplePresence({ userId: discord.userId, name: sampleName }) : null),
     [options?.sampleActivity, discord.userId, sampleName],
   );
-  const player = usePlaylist(config.music);
+  const player = useMusic(config.music);
   const uploadedAvatar = useMediaUrl(profile.avatarUrl);
   const banner = useMediaUrl(profile.bannerUrl);
   // Opening the real page counts a view; the editor's preview only reads the number.
@@ -225,6 +225,32 @@ export default function ProfilePage({ config, username, embedded, options }) {
   useEffect(() => {
     document.body.style.backgroundColor = theme.background.color;
   }, [theme.background.color]);
+
+  // Browsers block sound until the visitor does something. Without the splash,
+  // music starts on their first click or key press. The editor's preview stays quiet.
+  const { hasTrack, playing, play, pause } = player;
+  useEffect(() => {
+    if (embedded || effects.enterGate || !hasTrack) return undefined;
+    const events = ["pointerdown", "keydown"];
+    const start = () => {
+      for (const name of events) window.removeEventListener(name, start);
+      play();
+    };
+    for (const name of events) window.addEventListener(name, start);
+    return () => {
+      for (const name of events) window.removeEventListener(name, start);
+    };
+  }, [embedded, effects.enterGate, hasTrack, play]);
+
+  // In the editor, this preview and the song bar in the Music tab take turns:
+  // starting one pauses the other.
+  useEffect(() => {
+    if (!embedded || typeof BroadcastChannel === "undefined") return undefined;
+    const channel = new BroadcastChannel(AUDIO_CHANNEL);
+    channel.onmessage = () => pause();
+    if (playing) channel.postMessage("preview");
+    return () => channel.close();
+  }, [embedded, playing, pause]);
 
   useGoogleFont(theme.font);
   useAnimatedTitle(profile.pageTitle, profile.animatedTitle, embedded ? postTitle : null);
@@ -261,7 +287,6 @@ export default function ProfilePage({ config, username, embedded, options }) {
         tile={tile}
       />
     ) : null,
-    music: config.music.showPlayer && player.hasTracks ? <MusicPlayer player={player} theme={theme} tile={tile} /> : null,
   };
   const sections = config.sections.filter((id) => blocks[id]);
   const stagger = (index) =>
@@ -332,10 +357,11 @@ export default function ProfilePage({ config, username, embedded, options }) {
           theme={theme}
           onEnter={() => {
             setEntered(true);
-            if (player.hasTracks) player.play();
+            if (hasTrack) play();
           }}
         />
       )}
+      {!showGate && hasTrack && <SoundToggle player={player} theme={theme} showError={embedded} />}
       <main className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
         {!showGate && (
           <Tilt

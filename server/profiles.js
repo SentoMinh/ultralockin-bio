@@ -113,16 +113,13 @@ export function sanitizeConfig(raw, { username, discordId }) {
       fallbackStatus: choice(discord.fallbackStatus, ids(DISCORD_STATUSES), "offline"),
     },
     music: {
-      tracks: list(music.tracks, 10, (track, index) => ({
+      // One song per page.
+      tracks: list(music.tracks, 1, (track, index) => ({
         id: itemId(track.id, index),
-        title: text(track.title, 80),
-        artist: text(track.artist, 80),
         url: mediaUrl(track.url),
-        cover: mediaUrl(track.cover),
+        start: number(track.start, 0, 86400, 0),
       })),
-      shuffle: bool(music.shuffle, false),
       volume: number(music.volume, 0, 1, 0.4),
-      showPlayer: bool(music.showPlayer, true),
     },
     theme: {
       font: choice(theme.font, FONTS.map((font) => font.name), "Inter"),

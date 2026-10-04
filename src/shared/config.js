@@ -2,13 +2,12 @@ import { uid, withDefaults } from "./utils.js";
 
 export const CONFIG_VERSION = 1;
 
-export const SECTION_IDS = ["socials", "links", "discord", "music"];
+export const SECTION_IDS = ["socials", "links", "discord"];
 
 export const SECTION_LABELS = {
   socials: "Social icons",
   links: "Link cards",
   discord: "Discord card",
-  music: "Music player",
 };
 
 // Google Fonts families. `css` is the css2 `family=` value (only real weights).
@@ -137,7 +136,7 @@ export const STARTER_CONFIG = {
     fallbackName: "",
     fallbackStatus: "offline",
   },
-  music: { tracks: [], shuffle: false, volume: 0.4, showPlayer: true },
+  music: { tracks: [], volume: 0.4 },
   theme: {
     font: "Mali",
     accent: "#619ee7",
@@ -180,7 +179,7 @@ export const STARTER_CONFIG = {
     enterGate: false,
     enterText: "click to enter",
   },
-  sections: ["socials", "links", "discord", "music"],
+  sections: ["socials", "links", "discord"],
 };
 
 // Presets change the look only (theme + effects), never text or links.
@@ -279,7 +278,9 @@ export function normalizeConfig(raw) {
   };
   config.music = {
     ...config.music,
-    tracks: listOf(config.music.tracks, { id: "", title: "", artist: "", url: "", cover: "" }),
+    // A page has one song, played in the background with nothing shown for it.
+    // `start` is the second it begins at; it plays on to its end.
+    tracks: listOf(config.music.tracks, { id: "", url: "", start: 0 }).slice(0, 1),
   };
   const order = config.sections.filter(
     (id, index, list) => SECTION_IDS.includes(id) && list.indexOf(id) === index,

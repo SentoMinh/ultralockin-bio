@@ -12,7 +12,8 @@ Live example: https://bio.ultralockin.tech/sentoming
 - **Effects**: 3D tilt, cursor effects (including the oneko cat), name effects, background effects,
   typewriter text, scrolling tab title, click-to-enter screen
 - **Live Discord card**: status, games and Spotify through [Lanyard](https://github.com/Phineas/lanyard)
-- **Links**: about 90 social platforms, link cards, badges, a music player
+- **Links**: about 90 social platforms, link cards, badges
+- **Background music**: one song from a YouTube or SoundCloud link or an uploaded file, played as audio only, starting at the second you pick
 - **Real view counter**: one view per person per day, no IP addresses stored
 - **Accounts**: Discord login, invite-only sign-up, one username per person
 - **Uploads**: avatars, backgrounds, music and cursors stored in Cloudflare R2

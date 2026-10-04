@@ -12,6 +12,10 @@ export const MSG = {
   title: "bio-editor:title",
 };
 
+// BroadcastChannel on which the editor's song bar and the preview's music announce
+// that they started playing, so only one of them is heard at a time.
+export const AUDIO_CHANNEL = "bio-editor:audio";
+
 const USERNAME_PATTERN = /^[a-z0-9][a-z0-9_-]{2,23}$/;
 
 // A clean first profile for a new account, prefilled from their Discord login.

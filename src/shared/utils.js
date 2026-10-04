@@ -74,6 +74,82 @@ export const prettyUrl = (url) =>
     .replace(/^(https?:\/\/)?(www\.)?/i, "")
     .replace(/\/$/, "");
 
+// Recognizes a link from a music or video service: { provider }, or null for anything
+// else. Links that can play as hidden audio also get `background` ("youtube" with a
+// `videoId`, or "soundcloud" with the `src` of SoundCloud's official player).
+// Pages only ever load these known players, never an arbitrary link.
+export function streamEmbed(rawUrl) {
+  let url;
+  try {
+    url = new URL(String(rawUrl ?? "").trim());
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:") return null;
+  const host = url.hostname.replace(/^(www|m)\./, "");
+  const parts = url.pathname.split("/").filter(Boolean);
+  const id = (value) => (/^[\w-]{5,64}$/.test(value ?? "") ? value : "");
+
+  if (host === "youtube.com" || host === "music.youtube.com" || host === "youtu.be") {
+    const list = id(url.searchParams.get("list"));
+    const video =
+      host === "youtu.be"
+        ? id(parts[0])
+        : ["shorts", "embed", "live"].includes(parts[0])
+          ? id(parts[1])
+          : id(url.searchParams.get("v"));
+    if (video) return { provider: "YouTube", background: "youtube", videoId: video };
+    return list ? { provider: "YouTube" } : null;
+  }
+
+  if (host === "open.spotify.com") {
+    const at = parts[0]?.startsWith("intl-") ? 1 : 0;
+    const type = parts[at];
+    const spotifyId = id(parts[at + 1]);
+    if (!["track", "album", "playlist", "episode", "show", "artist"].includes(type) || !spotifyId) return null;
+    return { provider: "Spotify" };
+  }
+
+  if (host === "soundcloud.com") {
+    if (parts.length === 0) return null;
+    // Only single songs play hidden; sets and profiles don't.
+    if (parts.length !== 2 || parts.includes("sets")) return { provider: "SoundCloud" };
+    const target = encodeURIComponent(`https://soundcloud.com${url.pathname}`);
+    const options = "&auto_play=false&hide_related=true&show_comments=false&show_teaser=false";
+    return {
+      provider: "SoundCloud",
+      background: "soundcloud",
+      src: `https://w.soundcloud.com/player/?url=${target}${options}`,
+    };
+  }
+
+  if (host === "music.apple.com") return parts.length < 3 ? null : { provider: "Apple Music" };
+
+  if (host === "deezer.com") {
+    const at = parts.findIndex((part) => ["track", "album", "playlist"].includes(part));
+    return at >= 0 && /^\d{3,20}$/.test(parts[at + 1] ?? "") ? { provider: "Deezer" } : null;
+  }
+
+  return null;
+}
+
+// How a track is played: "file" (our own audio element), "youtube" or "soundcloud"
+// (that service's official player, hidden, audio only), or "" when the link can't
+// play in the background at all (Spotify, Apple Music, Deezer, playlists).
+export function backgroundKind(url) {
+  const value = String(url ?? "").trim();
+  if (!value) return "";
+  const embed = streamEmbed(value);
+  return embed ? (embed.background ?? "") : "file";
+}
+
+// "1:30" -> 90, "90" -> 90, "1:02:03" -> 3723. Anything else -> 0.
+export function parseClock(text) {
+  const parts = String(text ?? "").trim().split(":");
+  if (parts.length > 3 || parts.some((part) => !/^\d{1,5}$/.test(part))) return 0;
+  return parts.reduce((total, part) => total * 60 + Number(part), 0);
+}
+
 export function formatClock(totalSeconds) {
   if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return "0:00";
   const total = Math.floor(totalSeconds);
