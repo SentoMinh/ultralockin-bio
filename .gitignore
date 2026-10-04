@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.wrangler/
+*.log
+
+# Your own settings and secrets (copy the .example files to create these)
+wrangler.toml
+.dev.vars
+.env
+.env.*

@@ -1,0 +1,8 @@
+# Copy to .dev.vars for local development (git-ignored, never deployed).
+# DEV_LOGIN=1 enables the "Test login" box on 127.0.0.1, so you can work without Discord.
+DEV_LOGIN=1
+VIEW_SALT=local-dev
+# To test real Discord login locally, add your app's values and register
+# http://127.0.0.1:5190/api/auth/callback as a redirect in the Discord app:
+# DISCORD_CLIENT_ID=
+# DISCORD_CLIENT_SECRET=

@@ -1,0 +1,232 @@
+@import "tailwindcss" source(".");
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Editor chrome ---------- */
+
+.editor-body {
+  background: #09090d;
+  color: #e8e8ef;
+  font-family: "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+}
+
+/* In the components layer so Tailwind utilities (e.g. w-28) can override. */
+@layer components {
+  .ed-input {
+    width: 100%;
+    border-radius: 9px;
+    border: 1px solid rgb(255 255 255 / 0.08);
+    background: #0b0b10;
+    padding: 7px 10px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #ececf2;
+    outline: none;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+
+  .ed-input:focus {
+    border-color: #7c6cff;
+    box-shadow: 0 0 0 3px rgb(124 108 255 / 0.2);
+  }
+
+  .ed-input::placeholder {
+    color: #5b5b69;
+  }
+
+  select.ed-input {
+    appearance: none;
+    padding-right: 28px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8b99' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
+  .ed-range {
+    width: 100%;
+    accent-color: #7c6cff;
+  }
+
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 0.14) transparent;
+  }
+}
+
+.react-colorful {
+  width: 100% !important;
+  height: 150px !important;
+}
+
+.react-colorful__pointer {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* ---------- Profile page ---------- */
+
+@keyframes bio-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.bio-in {
+  animation: bio-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.caret::after {
+  content: "|";
+  margin-left: 1px;
+  font-weight: 400;
+  animation: caret-blink 1s step-end infinite;
+}
+
+@keyframes sparkle-life {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1) rotate(90deg);
+  }
+  100% {
+    transform: scale(0) rotate(180deg);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-slide {
+  to {
+    background-position: 200% center;
+  }
+}
+
+.fx-rainbow {
+  background-image: linear-gradient(90deg, #ff5f6d, #ffc371, #5dfc9d, #4facfe, #b86bff, #ff5f6d);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: fx-slide 3s linear infinite;
+}
+
+.fx-shine {
+  background-image: linear-gradient(110deg, var(--fx-base) 35%, #ffffff 50%, var(--fx-base) 65%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: fx-slide 2.4s linear infinite;
+}
+
+.fx-glitch {
+  position: relative;
+  display: inline-block;
+}
+
+.fx-glitch::before,
+.fx-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.fx-glitch::before {
+  color: #ff2d75;
+  animation: glitch-a 2.2s infinite steps(2, end);
+}
+
+.fx-glitch::after {
+  color: #2de2ff;
+  animation: glitch-b 1.7s infinite steps(2, end);
+}
+
+@keyframes glitch-a {
+  0%,
+  100% {
+    clip-path: inset(0 0 72% 0);
+    transform: translate(-2px, -1px);
+  }
+  25% {
+    clip-path: inset(22% 0 44% 0);
+    transform: translate(2px, 1px);
+  }
+  50% {
+    clip-path: inset(62% 0 8% 0);
+    transform: translate(-1px, 2px);
+  }
+  75% {
+    clip-path: inset(40% 0 30% 0);
+    transform: translate(3px, -1px);
+  }
+}
+
+@keyframes glitch-b {
+  0%,
+  100% {
+    clip-path: inset(66% 0 0 0);
+    transform: translate(2px, 1px);
+  }
+  33% {
+    clip-path: inset(8% 0 70% 0);
+    transform: translate(-2px, -1px);
+  }
+  66% {
+    clip-path: inset(44% 0 24% 0);
+    transform: translate(1px, -2px);
+  }
+}
+
+@keyframes ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ring-spin {
+  animation: ring-spin 3.5s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bio-in,
+  .fx-rainbow,
+  .fx-shine,
+  .fx-glitch::before,
+  .fx-glitch::after,
+  .ring-spin,
+  .caret::after {
+    animation: none !important;
+  }
+}

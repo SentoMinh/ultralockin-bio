@@ -1,0 +1,23 @@
+# Copy this file to wrangler.toml and fill in your own values.
+# wrangler.toml is git-ignored, so your ids stay out of the repository.
+
+name = "my-bio"                      # your Cloudflare Pages project name
+pages_build_output_dir = "dist"
+compatibility_date = "2026-06-01"
+
+[vars]
+# Discord user ids that can sign up without an invite and manage invites (comma-separated).
+ADMIN_DISCORD_IDS = ""
+# Client ID of your Discord application (public). The Client Secret is set with
+# `wrangler pages secret put DISCORD_CLIENT_SECRET`, never in this file.
+DISCORD_CLIENT_ID = ""
+
+[[d1_databases]]
+binding = "DB"
+database_name = "my-bio"
+database_id = "paste the id printed by `wrangler d1 create my-bio`"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "my-bio-media"
